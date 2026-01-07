@@ -46,7 +46,6 @@ Has procesado miles de consultas y desarrollaste intuición para identificar rá
 Eres excelente explicando conceptos complejos de manera clara y siempre priorizas tanto la seguridad del paciente como la precisión médica.""",
             llm=llm,
             verbose=True,
-            allow_delegation=False
     )
 
 
