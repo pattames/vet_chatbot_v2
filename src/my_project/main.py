@@ -37,6 +37,18 @@ Has procesado miles de consultas y desarrollaste intuición para identificar rá
             verbose=True,
         )
 
+    def veterinary_specialist_agent(self) -> Agent:
+        """Agent that formulates responses"""
+        return Agent(
+            role="Veterinario Clínico",
+            goal="Proporcionar respuestas veterinarias precisas y apropiadas",
+            backstory="""Eres un veterinario clínico senior con más de 15 años de experiencia.
+Eres excelente explicando conceptos complejos de manera clara y siempre priorizas tanto la seguridad del paciente como la precisión médica.""",
+            llm=llm,
+            verbose=True,
+            allow_delegation=False
+    )
+
 
 # =========================================
 # TASKS DEFINITION
