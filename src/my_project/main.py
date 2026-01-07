@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict
-from crewai import Agent, Task, Crew, Process
+from crewai import Agent, Task
 from langchain_groq import ChatGroq
 import logging
 from pydantic import SecretStr
@@ -16,10 +16,9 @@ if not api_key:
     raise ValueError("GROQ_API_KEY environment variable is required")
 
 llm = ChatGroq(
-    model="groq/llama-3.3-70b-versatile",
-    temperature=0.3,
-    api_key=SecretStr(api_key)
+    model="groq/llama-3.3-70b-versatile", temperature=0.3, api_key=SecretStr(api_key)
 )
+
 
 # ==========================================
 # AGENTS DEFINITION
@@ -30,12 +29,14 @@ class VeterinaryAgents:
     def classification_agent(self) -> Agent:
         """Agent that classifies queries"""
         return Agent(
-            role="Médico veterinario especializado en identificar consultas de tipo veterinarias o no veterinarias",
-            goal="Identificar si la consulta del usuario es de tipo veterinaria o no veterinaria",
-            backstory="Eres un médico veterinario con 5 años de experiencia en la clasificación de casos. Tienes la habilidad de identificar de manera precisa si la consulta es de tipo veterinaria o no veterinaria.",
+            role="Especialista en Triaje Veterinario",
+            goal="Clasificar consultas de usuarios para determinar si requieren atención veterinaria, son seguimientos conversacionales, o están fuera del ámbito veterinario",
+            backstory="""Eres un veterinario con experiencia en recepción de clínicas veterinarias.
+Has procesado miles de consultas y desarrollaste intuición para identificar rápidamente qué tipo de atención necesita cada caso. Valoras la eficiencia y la precisión en el triaje inicial.""",
             llm=llm,
-            verbose=True
+            verbose=True,
         )
+
 
 # =========================================
 # TASKS DEFINITION
@@ -43,13 +44,30 @@ class VeterinaryAgents:
 class VeterinaryTasks:
     """Define all tasks for the veterinary chatbot workflow"""
 
-    def classification_task(self, agent: Agent, user_query:str) -> Task:
+    def classification_task(self, agent: Agent, user_query: str, conversation_history: List[Dict[str, str]]) -> Task:
         """Classify query"""
+
+        # Recent conversation history
+        recent_history = "Sin historial"
+        if conversation_history:
+            recent_history = "\n".join(
+                [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-6:]]
+            )
+
         return Task(
-            description=f"""Analiza esta consulta: '{user_query}' y determina si es de tipo A, B o C.
-            - A: si la consulta se relaciona con medicina veterinaria
-            - B: si la consulta busca un seguimiento a la conversación mantenida hasta este punto y la conversación se relaciona con medicina veterinaria (revisar en memoria)
-            - C: si la consulta no se relaciona con medicina veterinaria""",
+            description=f"""Clasifica la siguiente consulta del usuario.
+
+Consulta: '{user_query}'
+
+Historial de conversación reciente:
+{recent_history}
+
+Tipos de clasificación:
+- A: La consulta trata directamente sobre medicina veterinaria (síntomas, tratamientos, cuidados animales)
+- B: La consulta es un seguimiento al historial de conversación (referencias a "eso", "lo anterior", preguntas de continuidad)
+- C: La consulta no tiene relación con medicina veterinaria
+
+Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             expected_output="Solamente la letra A, B o C, dependiendo del tipo del resultado.",
             agent=agent,
         )
