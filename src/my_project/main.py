@@ -68,7 +68,7 @@ class VeterinaryTasks:
         return Task(
             description=f"""Clasifica la siguiente consulta del usuario.
 
-Consulta: '{user_query}'
+Consulta: {user_query}
 
 Historial de conversación reciente:
 {recent_history}
@@ -81,4 +81,27 @@ Tipos de clasificación:
 Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             expected_output="Solamente la letra A, B o C, dependiendo del tipo del resultado.",
             agent=agent,
+        )
+
+    def specialist_response_task(self, agent: Agent, user_query: str, context: List[Task], conversation_history: List[Dict[str, str]]) -> Task:
+        """Formulate appropriate response based on query type"""
+
+        # Recent conversation history
+        recent_history = "Sin historial"
+        if conversation_history:
+            recent_history = "\n".join(
+                [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-6:]]
+            )
+
+        return Task(
+            description=f"""Formula una respuesta apropiada basándote en el tipo de consulta.
+
+Historial de conversación reciente: {recent_history}
+
+- Si la consulta es de tipo A o B, toma en cuenta el historial de conversación reciente (si es que existe) y formula una respuesta precisa.
+- Si la consulta es de tipo C, indica al usuario que sólo puedes responder a consultas relacionadas con veterinaria.
+            """,
+            agent=agent,
+            expected_output="Respuesta completa y apropiada para el tipo de consulta",
+            context=context
         )
