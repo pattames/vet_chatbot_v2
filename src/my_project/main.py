@@ -41,13 +41,12 @@ Has procesado miles de consultas y desarrollaste intuición para identificar rá
         """Agent that formulates responses"""
         return Agent(
             role="Veterinario Clínico",
-            goal="Proporcionar respuestas veterinarias precisas y apropiadas",
+            goal="Proporcionar respuestas veterinarias precisas y apropiadas, o redirigir amablemente consultas fuera del ámbito veterinario",
             backstory="""Eres un veterinario clínico senior con más de 15 años de experiencia.
 Eres excelente explicando conceptos complejos de manera clara y siempre priorizas tanto la seguridad del paciente como la precisión médica.""",
             llm=llm,
             verbose=True,
-    )
-
+        )
 
 # =========================================
 # TASKS DEFINITION
@@ -92,15 +91,18 @@ Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             recent_history = "\n".join(
                 [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-6:]]
             )
-
         return Task(
-            description=f"""Formula una respuesta apropiada basándote en el tipo de consulta.
+            description=f"""Formula una respuesta apropiada basándote en el tipo de consulta identificado.
 
-Historial de conversación reciente: {recent_history}
+Consulta del usuario: {user_query}
 
-- Si la consulta es de tipo A o B, toma en cuenta el historial de conversación reciente (si es que existe) y formula una respuesta precisa.
-- Si la consulta es de tipo C, indica al usuario que sólo puedes responder a consultas relacionadas con veterinaria.
-            """,
+Historial de conversación reciente:
+{recent_history}
+
+Instrucciones según el tipo de clasificación:
+- Tipo A (consulta veterinaria directa): Proporciona una respuesta médica precisa y útil.
+- Tipo B (seguimiento): Considera el historial y continúa la conversación de manera coherente.
+- Tipo C (no veterinaria): Indica amablemente que solo puedes responder consultas relacionadas con veterinaria.""",
             agent=agent,
             expected_output="Respuesta completa y apropiada para el tipo de consulta",
             context=context
