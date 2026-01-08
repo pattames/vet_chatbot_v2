@@ -53,7 +53,7 @@ Eres excelente explicando conceptos complejos de manera clara y siempre prioriza
 class VeterinaryTasks:
     """Define all tasks for the veterinary chatbot workflow"""
 
-    # Recent conversation history coming from Streamlit and properly formatted (last three interactions as a single string)
+    # Conversation history properly formatted (last three interactions as a single string)
     def _formatted_history(self, conversation_history: List[Dict[str, str]], limit: int = 6) -> str:
         if not conversation_history:
             return "Sin historial"
@@ -61,9 +61,10 @@ class VeterinaryTasks:
             [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-limit:]]
         )
 
-    def classification_task(self, agent: Agent, user_query: str, formatted_history: str) -> Task:
+    def classification_task(self, agent: Agent, user_query: str, conversation_history: List[Dict[str, str]]) -> Task:
         """Classify query"""
 
+        formatted_history = self._formatted_history(conversation_history)
         return Task(
             description=f"""Clasifica la siguiente consulta del usuario.
 
@@ -82,9 +83,10 @@ Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             agent=agent,
         )
 
-    def response_task(self, agent: Agent, user_query: str, context: List[Task], formatted_history: str) -> Task:
+    def response_task(self, agent: Agent, user_query: str, context: List[Task], conversation_history: List[Dict[str, str]]) -> Task:
         """Formulate appropriate response based on query type"""
 
+        formatted_history = self._formatted_history(conversation_history)
         return Task(
             description=f"""Formula una respuesta apropiada basándote en el tipo de consulta identificado.
 
@@ -113,17 +115,15 @@ class VeterinaryCrue:
         self.task_manager = VeterinaryTasks()
 
     def run(self, user_query: str) -> str:
-        """
-        Execute the multi-agent workflow for a user query
+        """Execute the multi-agent workflow for a user query"""
 
-        Args:
-            user_query: Veterinary question from the user
-
-        Returns:
-            Agent response
-        """
         logger.info(f"Processing query: {user_query}")
 
         # Initialize agents
+        classification_agent = self.agent_manager.classification_agent()
+        specialist_agent= self.agent_manager.specialist_agent()
+
+        # Initialize tasks with dependencies
+        classification_task = self.task_manager.classification_task()
 
 
