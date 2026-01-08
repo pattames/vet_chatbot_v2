@@ -107,37 +107,38 @@ Instrucciones según el tipo de clasificación:
 # ==============================
 # CREW ORCHESTRATION
 # ==============================
-class VeterinaryCrue:
+class VeterinaryCrew:
     """Orchestrate the multi-agent veterinary chatbot workflow"""
 
     def __init__(self):
         self.agent_manager = VeterinaryAgents()
         self.task_manager = VeterinaryTasks()
+        
+        # Initialize agents once
+        self.classification_agent = self.agent_manager.classification_agent()
+        self.specialist_agent= self.agent_manager.specialist_agent()
 
     def run(self, user_query: str, conversation_history: List[Dict[str, str]]):
         """Execute the multi-agent workflow for a user query"""
 
         logger.info(f"Processing query: {user_query}")
 
-        # Initialize agents
-        classification_agent = self.agent_manager.classification_agent()
-        specialist_agent= self.agent_manager.specialist_agent()
-
-        # Initialize tasks with dependencies
-        classification_task = self.task_manager.classification_task(classification_agent, user_query, conversation_history)
-        response_task = self.task_manager.response_task(specialist_agent, user_query, conversation_history, context=[classification_task])
+        # Initialize tasks with dependencies (on every run because they contain a new query every time)
+        classification_task = self.task_manager.classification_task(self.classification_agent, user_query, conversation_history)
+        response_task = self.task_manager.response_task(self.specialist_agent, user_query, conversation_history, context=[classification_task])
 
         # Initialize crew, run it and return the result
         crew = Crew(
-            agents=[classification_agent, specialist_agent],
+            agents=[self.classification_agent, self.specialist_agent],
             tasks=[classification_task, response_task],
             process=Process.sequential,
             stream=False,
-            verbose=True
+            verbose=True    # Consider removing it after debugging (it floods logs/console)
         )
-
+        
+        result = crew.kickoff()
         logger.info("Query processing completed")
-        return crew.kickoff()
+        return result
 
 # =============================
 # MAIN EXECUTION (for testing)
