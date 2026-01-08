@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict
-from crewai import Agent, Task
+from crewai import Agent, Task, Crew, Process
 from langchain_groq import ChatGroq
 import logging
 from pydantic import SecretStr
@@ -83,7 +83,7 @@ Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             agent=agent,
         )
 
-    def response_task(self, agent: Agent, user_query: str, context: List[Task], conversation_history: List[Dict[str, str]]) -> Task:
+    def response_task(self, agent: Agent, user_query: str, conversation_history: List[Dict[str, str]], context: List[Task]) -> Task:
         """Formulate appropriate response based on query type"""
 
         formatted_history = self._formatted_history(conversation_history)
@@ -114,7 +114,7 @@ class VeterinaryCrue:
         self.agent_manager = VeterinaryAgents()
         self.task_manager = VeterinaryTasks()
 
-    def run(self, user_query: str) -> str:
+    def run(self, user_query: str, conversation_history: List[Dict[str, str]]):
         """Execute the multi-agent workflow for a user query"""
 
         logger.info(f"Processing query: {user_query}")
@@ -124,6 +124,25 @@ class VeterinaryCrue:
         specialist_agent= self.agent_manager.specialist_agent()
 
         # Initialize tasks with dependencies
-        classification_task = self.task_manager.classification_task()
+        classification_task = self.task_manager.classification_task(classification_agent, user_query, conversation_history)
+        response_task = self.task_manager.response_task(specialist_agent, user_query, conversation_history, context=[classification_task])
 
+        # Initialize crew, run it and return the result
+        crew = Crew(
+            agents=[classification_agent, specialist_agent],
+            tasks=[classification_task, response_task],
+            process=Process.sequential,
+            stream=False,
+            verbose=True
+        )
+
+        logger.info("Query processing completed")
+        return crew.kickoff()
+
+# =============================
+# MAIN EXECUTION (for testing)
+# =============================
+if __name__ == "__main__":
+    logger.error("Unable to run directly without Streamlit app running")
+    logger.info("main.py won't work without Streamlit's conversation history")
 
