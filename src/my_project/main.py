@@ -15,10 +15,9 @@ if not api_key:
     logger.error("GROQ_API_KEY environment variable is required")
     raise ValueError("GROQ_API_KEY environment variable is required")
 
-llm = ChatGroq(
-    model="groq/llama-3.3-70b-versatile", temperature=0.3, api_key=SecretStr(api_key)
-)
-
+# Different temperature LLMs to suit task
+classification_llm = ChatGroq(model="groq/llama-3.3-70b-versatile", temperature=0.1, api_key=SecretStr(api_key))    # More deterministic
+specialist_llm = ChatGroq(model="groq/llama-3.3-70b-versatile", temperature=0.4, api_key=SecretStr(api_key))    # More natural
 
 # ==========================================
 # AGENTS DEFINITION
@@ -33,7 +32,7 @@ class VeterinaryAgents:
             goal="Clasificar consultas de usuarios para determinar si requieren atención veterinaria, son seguimientos conversacionales, o están fuera del ámbito veterinario",
             backstory="""Eres un veterinario con experiencia en recepción de clínicas veterinarias.
 Has procesado miles de consultas y desarrollaste intuición para identificar rápidamente qué tipo de atención necesita cada caso. Valoras la eficiencia y la precisión en el triaje inicial.""",
-            llm=llm,
+            llm=classification_llm,
             verbose=True,
         )
 
@@ -44,7 +43,7 @@ Has procesado miles de consultas y desarrollaste intuición para identificar rá
             goal="Proporcionar respuestas veterinarias precisas y apropiadas, o redirigir amablemente consultas fuera del ámbito veterinario",
             backstory="""Eres un veterinario clínico senior con más de 15 años de experiencia.
 Eres excelente explicando conceptos complejos de manera clara y siempre priorizas tanto la seguridad del paciente como la precisión médica.""",
-            llm=llm,
+            llm=specialist_llm,
             verbose=True,
         )
 
@@ -54,15 +53,16 @@ Eres excelente explicando conceptos complejos de manera clara y siempre prioriza
 class VeterinaryTasks:
     """Define all tasks for the veterinary chatbot workflow"""
 
-    def classification_task(self, agent: Agent, user_query: str, conversation_history: List[Dict[str, str]]) -> Task:
-        """Classify query"""
+    # Recent conversation history coming from Streamlit and properly formatted (last three interactions as a single string)
+    def _formatted_history(self, conversation_history: List[Dict[str, str]], limit: int = 6) -> str:
+        if not conversation_history:
+            return "Sin historial"
+        return "\n".join(
+            [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-limit:]]
+        )
 
-        # Recent conversation history
-        recent_history = "Sin historial"
-        if conversation_history:
-            recent_history = "\n".join(
-                [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-6:]]
-            )
+    def classification_task(self, agent: Agent, user_query: str, formatted_history: str) -> Task:
+        """Classify query"""
 
         return Task(
             description=f"""Clasifica la siguiente consulta del usuario.
@@ -70,7 +70,7 @@ class VeterinaryTasks:
 Consulta: {user_query}
 
 Historial de conversación reciente:
-{recent_history}
+{formatted_history}
 
 Tipos de clasificación:
 - A: La consulta trata directamente sobre medicina veterinaria (síntomas, tratamientos, cuidados animales)
@@ -82,22 +82,16 @@ Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             agent=agent,
         )
 
-    def specialist_response_task(self, agent: Agent, user_query: str, context: List[Task], conversation_history: List[Dict[str, str]]) -> Task:
+    def specialist_response_task(self, agent: Agent, user_query: str, context: List[Task], formatted_history: str) -> Task:
         """Formulate appropriate response based on query type"""
 
-        # Recent conversation history
-        recent_history = "Sin historial"
-        if conversation_history:
-            recent_history = "\n".join(
-                [f"{msg['role']}: {msg['content']}" for msg in conversation_history[-6:]]
-            )
         return Task(
             description=f"""Formula una respuesta apropiada basándote en el tipo de consulta identificado.
 
 Consulta del usuario: {user_query}
 
 Historial de conversación reciente:
-{recent_history}
+{formatted_history}
 
 Instrucciones según el tipo de clasificación:
 - Tipo A (consulta veterinaria directa): Proporciona una respuesta médica precisa y útil.
