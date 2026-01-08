@@ -36,7 +36,7 @@ Has procesado miles de consultas y desarrollaste intuición para identificar rá
             verbose=True,
         )
 
-    def veterinary_specialist_agent(self) -> Agent:
+    def specialist_agent(self) -> Agent:
         """Agent that formulates responses"""
         return Agent(
             role="Veterinario Clínico",
@@ -82,7 +82,7 @@ Analiza la consulta y responde ÚNICAMENTE con la letra correspondiente.""",
             agent=agent,
         )
 
-    def specialist_response_task(self, agent: Agent, user_query: str, context: List[Task], formatted_history: str) -> Task:
+    def response_task(self, agent: Agent, user_query: str, context: List[Task], formatted_history: str) -> Task:
         """Formulate appropriate response based on query type"""
 
         return Task(
@@ -101,3 +101,29 @@ Instrucciones según el tipo de clasificación:
             expected_output="Respuesta completa y apropiada para el tipo de consulta",
             context=context
         )
+
+# ==============================
+# CREW ORCHESTRATION
+# ==============================
+class VeterinaryCrue:
+    """Orchestrate the multi-agent veterinary chatbot workflow"""
+
+    def __init__(self):
+        self.agent_manager = VeterinaryAgents()
+        self.task_manager = VeterinaryTasks()
+
+    def run(self, user_query: str) -> str:
+        """
+        Execute the multi-agent workflow for a user query
+
+        Args:
+            user_query: Veterinary question from the user
+
+        Returns:
+            Agent response
+        """
+        logger.info(f"Processing query: {user_query}")
+
+        # Initialize agents
+
+
