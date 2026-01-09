@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 from my_project.main import VeterinaryCrew
 import logging
 
