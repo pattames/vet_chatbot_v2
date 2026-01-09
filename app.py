@@ -1,5 +1,5 @@
 import streamlit as st
-from my_project.main import VeterinaryCrew
+from src.veterinary_crew.main import VeterinaryCrew
 import logging
 
 # Configure logging
@@ -112,7 +112,6 @@ if prompt := st.chat_input("Escribe tu consulta veterinaria..."):
         try:
             with st.spinner("Procesando consulta..."):
                 #Call the crew and pass conversation history to it
-                crew = get_crew()
                 response = crew.run(prompt, st.session_state.messages[:-1])    # Exclude the user message we just added (history shouldn't include current query)
 
                 # Extract the actual response text
