@@ -121,8 +121,11 @@ if prompt := st.chat_input("Escribe tu consulta veterinaria..."):
 
         try:
             with st.spinner("Procesando consulta..."):
-                #Call the crew
-                response = st.session_state.crew.run(prompt)
+                #Call the crew and pass conversation history to it
+                response = st.session_state.crew.run(
+                    prompt,
+                    st.session_state.messages[:-1]   # Exclude the message we just added
+                )
 
                 # Extract the actual response text
                 if hasattr(response, "raw"):
@@ -132,10 +135,8 @@ if prompt := st.chat_input("Escribe tu consulta veterinaria..."):
                 else:
                     response_text = str(response)
                 
-                # Display response
+                # Display and store response
                 message_placeholder.markdown(response_text)
-
-                # Add assistant message to chat
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": response_text
