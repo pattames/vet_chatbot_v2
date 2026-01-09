@@ -1,9 +1,7 @@
 import os
 from typing import List, Dict
-from crewai import Agent, Task, Crew, Process
-from langchain_groq import ChatGroq
+from crewai import Agent, Task, Crew, Process, LLM
 import logging
-from pydantic import SecretStr
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -16,8 +14,8 @@ if not api_key:
     raise ValueError("GROQ_API_KEY environment variable is required")
 
 # Different temperature LLMs to suit task
-classification_llm = ChatGroq(model="groq/llama-3.3-70b-versatile", temperature=0.1, api_key=SecretStr(api_key))    # More deterministic
-specialist_llm = ChatGroq(model="groq/llama-3.3-70b-versatile", temperature=0.4, api_key=SecretStr(api_key))    # More natural
+classification_llm = LLM(model="groq/llama-3.3-70b-versatile", temperature=0.1, api_key=api_key)    # More deterministic
+specialist_llm = LLM(model="groq/llama-3.3-70b-versatile", temperature=0.4, api_key=api_key)    # More natural
 
 # ==========================================
 # AGENTS DEFINITION
