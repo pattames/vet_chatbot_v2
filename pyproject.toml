@@ -2,7 +2,7 @@
 name = "vet_chatbot"
 version = "2.0.0"
 requires-python = ">=3.13.11"
-dependencies = ["crewai>=1.7.2", "langchain_groq>=1.1.1"]
+dependencies = ["crewai>=1.7.2", "langchain_groq>=1.1.1", "streamlit>=1.52.2"]
 
 [project.optional-dependencies]
 dev = [
