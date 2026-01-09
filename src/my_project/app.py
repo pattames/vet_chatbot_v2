@@ -37,29 +37,27 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
+# Initialize session state for conversation history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "crew" not in st.session_state:
-    st.session_state.crew = None
+# Initialize VeterinaryCrew
+@st.cache_resource
+def get_crew():
+    return VeterinaryCrew()
 
-# To check if the token/request error is a daily limit
+try:
+    crew = get_crew()
+except Exception as e:
+    st.error(f"❌ Error al inicializar el sistema: {e}")
+    st.stop()
+
+# Check if the token/request error is a daily limit
 def is_daily_limit(error_message: str) -> bool:
     """Check if the error is a daily limit (TPD/RPD) vs minute limit (TPM/RPM)"""
     error_lower = error_message.lower()
     return any(keyword in error_lower for keyword in ["per day", "daily", "tpd", "rpd"])
 
-# Initialize VeterinaryCrew
-@st.cache_resource
-def initialize_crew():
-    """Initialize the Veterinary Crew once"""
-    try:
-        return VeterinaryCrew()
-    except Exception as e:
-        logger.error(f"Error initializing crew: {str(e)}")
-        return None
-    
 # Header
 st.title("Asistente Veterinario UNAM 🩺")
 st.caption("Chatbot educativo para estudiantes de medicina veterinaria")
@@ -95,14 +93,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# Initialize crew if not already done
-if st.session_state.crew is None:
-    with st.spinner("Inicializando sistema..."):
-        st.session_state.crew = initialize_crew()
-        if st.session_state.crew is None:
-            st.error("❌ Error al inicializar el sistema. Por favor, verifica tu configuración.")
-            st.stop()
-
 # Display chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -122,10 +112,8 @@ if prompt := st.chat_input("Escribe tu consulta veterinaria..."):
         try:
             with st.spinner("Procesando consulta..."):
                 #Call the crew and pass conversation history to it
-                response = st.session_state.crew.run(
-                    prompt,
-                    st.session_state.messages[:-1]   # Exclude the message we just added
-                )
+                crew = get_crew()
+                response = crew.run(prompt, st.session_state.messages[:-1])    # Exclude the user message we just added (history shouldn't include current query)
 
                 # Extract the actual response text
                 if hasattr(response, "raw"):
