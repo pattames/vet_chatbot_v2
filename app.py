@@ -1,6 +1,10 @@
-import streamlit as st
-from src.veterinary_crew.main import VeterinaryCrew
 import logging
+
+# Suppress LiteLLM's noisy error logging
+logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
+
+import streamlit as st  # noqa: E402
+from src.veterinary_crew.main import VeterinaryCrew    # noqa: E402
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
