@@ -26,11 +26,11 @@ Multi-agent chatbot using CrewAI and Streamlit.
 
    - On macOS/Linux:
      ```bash
-     source menv/bin/activate
+     source .venv/bin/activate
      ```
    - On Windows:
      ```bash
-     menv\Scripts\activate
+     .venv\Scripts\activate
      ```
 
 4. **Install dependencies:**
@@ -50,7 +50,7 @@ Multi-agent chatbot using CrewAI and Streamlit.
 
    ```bash
    # Edit with your preferred editor
-   nano .env  # or vim, code, etc.
+   vim .env  # or nvim, nano, code, etc.
    ```
 
 6. **Start the app:**
