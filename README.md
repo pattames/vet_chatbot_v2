@@ -61,6 +61,29 @@ Multi-agent chatbot using CrewAI and Streamlit.
 
    The UI will open in your browser at `http://localhost:8501`
 
+## When Adding or Removing Dependencies
+
+1. **Add or remove them from** `pyproject.toml`
+
+   Then run:
+
+   ```bash
+   pip install -e .[dev]
+   ```
+
+2. **Regenerate lock files**
+
+   ```bash
+   pip-compile -o requirements.lock pyproject.toml
+   pip-compile --extra dev -o requirements-dev.lock pyproject.toml
+   ```
+
+3. **Ensure your environment exactly matches both lock files**
+
+   ```bash
+   pip-sync requirements.lock requirements-dev.lock
+   ```
+
 ## Deactivating Virtual Environment
 
 When done working on the project:
