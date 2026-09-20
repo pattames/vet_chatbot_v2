@@ -14,8 +14,8 @@ if not api_key:
     raise ValueError("GROQ_API_KEY environment variable is required")
 
 # Different temperature LLMs to suit task
-classification_llm = LLM(model="groq/llama-3.3-70b-versatile", temperature=0.1, api_key=api_key)    # More deterministic
-specialist_llm = LLM(model="groq/llama-3.3-70b-versatile", temperature=0.4, api_key=api_key)    # More natural
+classification_llm = LLM(model="openai/gpt-oss-120b", temperature=0.1, api_key=api_key)    # More deterministic
+specialist_llm = LLM(model="openai/gpt-oss-120b", temperature=0.4, api_key=api_key)    # More natural
 
 # ==========================================
 # AGENTS DEFINITION
